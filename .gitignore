@@ -1,0 +1,38 @@
+# --- Confidential: saved customer reviews -------------------------------
+# Saved reviews contain customer information and private reviewer notes.
+# They must never be committed.
+PCB-Review_*.html
+reviews/
+*.review.html
+
+# Older templates and archived reviews kept alongside the working copy
+OLD/
+
+# --- OS junk ------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+.directory
+.Trash-*
+
+# --- Editors ------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+
+# --- Python (tools/) ----------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
