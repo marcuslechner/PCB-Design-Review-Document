@@ -4,6 +4,8 @@ A single-file, offline tool for running structured PCB design reviews: customer 
 
 Built by Marcus Lechner at Lechnology Engineering.
 
+**[Try it online](https://marcuslechner.github.io/PCB-Design-Review-Document/pcb-design-review.html)** in your browser, no install needed. Autosave works there too, but use **Save review** to keep a portable copy.
+
 https://github.com/user-attachments/assets/070b4f75-8d94-4626-b8a6-fc492cd98896
 
 
