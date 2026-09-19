@@ -1,4 +1,4 @@
-MIT License
+# MIT License
 
 Copyright (c) 2026 Marcus Lechner
 
@@ -19,3 +19,17 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Name and logo
+
+This license covers the software only. The Lechnology Engineering name and
+logo are not licensed for use. If you redistribute or build on this software,
+please remove or replace them with your own branding.
+
+## Beerware
+
+This part is not a condition of the license, just a request: if you find this
+software useful and we meet someday, you can buy me a beer (or a beverage of
+your choice) in return. 🍺
