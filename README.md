@@ -183,7 +183,7 @@ Saved customer reviews (`PCB-Review_*.html`) are excluded by `.gitignore` and mu
 
 ## License
 
-[MIT](LICENSE.md). You can use, modify and share this tool, including commercially.
+Source-available under the [Lechnology Source-Available License](LICENSE.md). You can use, modify and share this tool, including internally in your own business, but you can't sell it or offer it as a paid product or service. This is not an OSI-approved open source license.
 
 The Lechnology Engineering name and logo are not included in the license. Please replace them with your own branding if you redistribute or build on this project.
 
