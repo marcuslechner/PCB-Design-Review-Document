@@ -4,7 +4,9 @@ A single-file, offline tool for running structured PCB design reviews: customer 
 
 Built by Marcus Lechner at Lechnology Engineering.
 
-<!-- Add a screenshot here, e.g. docs/screenshot.png (use a dummy review, never customer data) -->
+https://github.com/user-attachments/assets/070b4f75-8d94-4626-b8a6-fc492cd98896
+
+
 
 ## Features
 
