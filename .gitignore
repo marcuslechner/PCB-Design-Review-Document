@@ -36,3 +36,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Demo recordings (hosted via GitHub upload in the README, not stored in the repo)
+docs/demo.webm
+docs/demo.mp4
