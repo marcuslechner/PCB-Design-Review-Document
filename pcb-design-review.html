@@ -120,6 +120,25 @@ li.inh-ex .answer{opacity:.5}
 .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .links:empty{display:none}
 .subs .links,.tree .links{margin-left:27px}
+
+/* Power tree */
+.area[data-tree]{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.86rem;tab-size:2}
+.area.collapsed{display:none}
+.ptree{position:relative;margin:4px 0 8px 27px;padding:10px 12px;background:var(--field);border:1px solid var(--line);border-radius:4px;font-size:.9rem;line-height:1.35;overflow-x:auto}
+.ptree:empty{display:none}
+.ptree.shut{cursor:pointer}
+.ptree.shut:hover{border-color:var(--brand)}
+.pt-edit{position:absolute;top:6px;right:6px;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:.8rem;color:var(--brand);cursor:pointer}
+.pt-edit:hover{border-color:var(--brand)}
+.ptree ul{list-style:none;margin:0;padding:0}
+.ptree ul ul{margin-left:6px}
+.ptree ul ul li{position:relative;padding:3px 0 0 18px}
+.ptree ul ul li::before{content:"";position:absolute;left:0;top:0;width:12px;height:calc(.68em + 4px);border-left:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);border-bottom-left-radius:4px}
+.ptree ul ul li:not(:last-child)::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1.5px solid var(--muted)}
+.ptree>ul>li{padding-top:4px}
+.ptree>ul>li+li{margin-top:6px}
+.pt-name{font-weight:600;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.88em}
+.pt-note{color:var(--muted)}
 .links a{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--brand);font-size:.85rem;font-weight:600;text-decoration:none}
 .links a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .links a svg{flex:none}
@@ -303,7 +322,7 @@ const QUESTIONS = [
 const SCHEM = [
   {card:"Boundary scan", items:[
     {t:"What are the inputs and outputs?", a:"Look for connectors and headers: USB, CAN, UART, SWD/JTAG, GPIO breakouts, antennas, buttons, LEDs"},
-    {t:"What is powering this?", a:"Look for power rails with common names: SYS, 12V, VDD_MAIN, VIN, VBAT, VBUS, 5V, 3V3, 1V8"},
+    {t:"What is powering this?", tree:1, a:"Look for power rails with common names: SYS, 12V, VDD_MAIN, VIN, VBAT, VBUS, 5V, 3V3, 1V8\nPut each rail on its own line and indent it (Tab) under the rail that feeds it to draw a power tree, e.g.\n+12V_AON - always on\n  +5VA\n    +3.3VA"},
     {t:"What are the main ICs?", a:"e.g. MCU / SoC, FPGA, PMIC and regulators, transceivers (CAN, Ethernet, RS-485), memory, sensors"}
   ]},
   {card:"System view", items:[
@@ -456,7 +475,7 @@ function renderTree(items, prefix, inhEx){
         <label class="chk"><input type="checkbox" data-check="${id}" ${st.d ? "checked" : ""} ${dead ? "disabled" : ""}><span class="txt">${esc(it.t)}</span></label>
         ${inhEx ? "" : `<button type="button" class="scope" data-scope="${id}" aria-pressed="${ex}">${ex ? "Put back in scope" : "Out of scope"}</button>`}
       </div>
-      ${it.a && !dead ? `<textarea class="area answer" data-answer="${id}" placeholder="${esc(typeof it.a === "string" ? it.a : "Notes / customer answer")}" aria-label="${esc(it.t)}">${esc(st.a)}</textarea>` : ""}
+      ${it.a && !dead ? `<textarea class="area answer" data-answer="${id}" ${it.tree ? "data-tree" : ""} placeholder="${esc(typeof it.a === "string" ? it.a : "Notes / customer answer")}" aria-label="${esc(it.t)}">${esc(st.a)}</textarea>` : ""}
       ${ex ? `<input class="reason" data-reason="${id}" placeholder="Why not reviewed? e.g. customer request by email, 12 Sep" value="${esc(st.r)}">` : ""}
       ${kids ? renderTree(it.c, id, dead) : ""}
     </li>`;
@@ -577,7 +596,88 @@ function rerenderSheet(page, freshId){
   return nu;
 }
 function updateTotals(){ $("#totals").innerHTML = tallyChips(state.pages.flatMap(p => p.notes)); }
-function grow(t){ t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; refreshLinks(t); }
+function grow(t){ t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; refreshLinks(t); if (t.hasAttribute("data-tree")) refreshTree(t); }
+
+/* ---------- Power tree: indented lines in a data-tree box are drawn as a tree below it ---------- */
+function parseTree(text){
+  const roots = [], stack = [];
+  text.split("\n").forEach(line => {
+    if (!line.trim()) return;
+    const indent = line.match(/^\s*/)[0].replace(/\t/g, "  ").length;
+    const body = line.trim().replace(/^(?:->|→|=>|[•*]\s|-\s)\s*/, "");
+    const m = body.match(/^(.+?)(?:\s+[-–—]\s+|\t|\s{2,})(.+)$/);
+    const node = {name: m ? m[1] : body, note: m ? m[2] : "", indent, kids: []};
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+    (stack.length ? stack[stack.length - 1].kids : roots).push(node);
+    stack.push(node);
+  });
+  return roots;
+}
+function treeHtml(nodes){
+  return "<ul>" + nodes.map(n =>
+    `<li><span class="pt-name">${esc(n.name)}</span>${n.note ? ` <span class="pt-note">${esc(n.note)}</span>` : ""}${n.kids.length ? treeHtml(n.kids) : ""}</li>`
+  ).join("") + "</ul>";
+}
+// Once there is a tree the source box folds away; click the tree or Edit to open it again
+function refreshTree(t){
+  const links = t.nextElementSibling;
+  let box = links.nextElementSibling, fresh = false;
+  if (!box || !box.classList.contains("ptree")) {
+    box = document.createElement("div"); box.className = "ptree"; fresh = true;
+    links.insertAdjacentElement("afterend", box);
+  }
+  const roots = parseTree(t.value), has = roots.some(r => r.kids.length);
+  if (!has) t.classList.remove("collapsed");
+  else if (fresh && document.activeElement !== t) t.classList.add("collapsed");
+  const shut = t.classList.contains("collapsed");
+  box.classList.toggle("shut", shut);
+  box.innerHTML = has ? `<button type="button" class="pt-edit" data-tree-edit>${shut ? "Edit" : "Done"}</button>` + treeHtml(roots) : "";
+}
+function setTreeOpen(t, open){
+  t.classList.toggle("collapsed", !open);
+  if (open) { grow(t); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+  else refreshTree(t);
+}
+const treeSrc = box => box.previousElementSibling.previousElementSibling;
+document.addEventListener("mousedown", e => { if (e.target.closest("[data-tree-edit]")) e.preventDefault(); });
+document.addEventListener("click", e => {
+  const box = e.target.closest(".ptree"); if (!box) return;
+  const t = treeSrc(box), btn = e.target.closest("[data-tree-edit]");
+  if (btn) setTreeOpen(t, t.classList.contains("collapsed"));
+  else if (t.classList.contains("collapsed") && !getSelection().toString()) setTreeOpen(t, true);
+});
+document.addEventListener("focusout", e => {
+  const t = e.target;
+  if (t.tagName === "TEXTAREA" && t.hasAttribute("data-tree") && !t.classList.contains("collapsed")) {
+    const box = t.nextElementSibling.nextElementSibling;
+    if (box && box.querySelector(".pt-edit")) setTreeOpen(t, false);
+  }
+});
+document.addEventListener("keydown", e => {
+  const t = e.target;
+  if (t.tagName !== "TEXTAREA" || !t.hasAttribute("data-tree") || e.ctrlKey || e.altKey || e.metaKey) return;
+  const v = t.value, a = t.selectionStart, b = t.selectionEnd;
+  if (e.key === "Enter" && !e.shiftKey) {
+    // Keep the current line's indent on the new line
+    const ind = v.slice(v.lastIndexOf("\n", a - 1) + 1).match(/^[ \t]*/)[0];
+    if (!ind) return;
+    e.preventDefault();
+    t.setRangeText("\n" + ind, a, b, "end");
+  } else if (e.key === "Tab") {
+    // Indent or outdent every line the selection touches by two spaces
+    e.preventDefault();
+    const start = v.lastIndexOf("\n", a - 1) + 1;
+    let end = v.indexOf("\n", b > a && v[b - 1] === "\n" ? b - 1 : b); if (end < 0) end = v.length;
+    const lines = v.slice(start, end).split("\n");
+    const out = lines.map(l => e.shiftKey ? l.replace(/^(?: {1,2}|\t)/, "") : "  " + l);
+    const shift = out[0].length - lines[0].length;
+    t.setRangeText(out.join("\n"), start, end, "preserve");
+    const len = out.join("\n").length - lines.join("\n").length;
+    if (a === b) t.selectionStart = t.selectionEnd = Math.max(start, a + shift);
+    else { t.selectionStart = Math.max(start, a + shift); t.selectionEnd = b + len; }
+  } else return;
+  t.dispatchEvent(new Event("input", {bubbles: true}));
+});
 
 /* ---------- Link chips: any web address typed in a notes box shows as a clickable chip below it ---------- */
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi;
