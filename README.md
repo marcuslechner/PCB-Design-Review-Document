@@ -1,6 +1,6 @@
 # PCB Design Review
 
-A single-file, offline tool for running structured PCB design reviews: customer intake, a schematic review checklist, and page-by-page findings with customer replies. Each review saves as its own self-contained HTML file that you can reopen, archive or send.
+A single-file, offline tool for running structured PCB design reviews: customer intake, a schematic review checklist, and sheet-by-sheet findings with customer replies. Each review saves as its own self-contained HTML file that you can reopen, archive or send.
 
 Built by Marcus Lechner at Lechnology Engineering.
 
@@ -35,14 +35,15 @@ https://github.com/user-attachments/assets/070b4f75-8d94-4626-b8a6-fc492cd98896
 - Tick items as you go, or mark them out of scope with a reason. Ticking a group ticks everything under it.
 - A progress count shows how many items are done and how many are out of scope.
 
-**Page-by-page findings**
-- **Add page** creates a card for each schematic page, with page name and number. New pages start with a Reviewer Notepad row.
+**Sheet-by-sheet findings**
+- **Add sheet** creates a card for each schematic sheet, with sheet name and number. New sheets start with a Reviewer Notepad row.
 - **Add note** adds a finding row with a severity dropdown, an automatic reference, your notes and the customer's reply, all on one line.
 - Rows are colour coded by severity (see the table below).
-- References are generated automatically, e.g. `3-W2` is the second Error/Warning on page 3. They update when you change a severity or page number.
-- Tallies by severity are shown for each page and for the whole review.
+- References are generated automatically, e.g. `3-W2` is the second Error/Warning on sheet 3. They update when you change a severity or sheet number.
+- Tallies by severity are shown for each sheet and for the whole review.
+- The ↑ / ↓ buttons on a sheet move it up or down, and **Sort by sheet number** puts every sheet in number order.
 - Critical findings get a **Customer notified** date and time field, so there's a record of when the customer was told.
-- Deleting a page or note needs a second click to confirm.
+- Deleting a sheet or note needs a second click to confirm.
 
 **Link chips**
 - Paste a web address anywhere in a notes box and a clickable chip appears below it. Addresses starting with `www.` work too.
@@ -70,7 +71,7 @@ Review Later and Reviewer Notepad rows have one wide notes box and no customer r
 
 1. Download `pcb-design-review.html`.
 2. Open it in any modern browser (Chrome, Edge, Firefox or Safari).
-3. Fill in the header, work through the intake and checklist, and add pages and findings.
+3. Fill in the header, work through the intake and checklist, and add sheets and findings.
 4. Click **Save review** to save the customer's review as its own file.
 
 ## Recommended workflow
@@ -78,7 +79,7 @@ Review Later and Reviewer Notepad rows have one wide notes box and no customer r
 1. **Keep the template blank.** Treat `pcb-design-review.html` as your starting point and don't save customer data into it.
 2. **Intake:** go through the intake with the customer. Tick the areas they want reviewed, mark exclusions out of scope with who asked and when, and fill in the project details.
 3. **Save:** click **Save review** to create that customer's file. The template goes back to blank the next time you open it.
-4. **Review:** work through the schematic, adding a page card for each schematic page and logging findings. Tell the customer about any Critical finding straight away and fill in the notified date.
+4. **Review:** work through the schematic, adding a sheet card for each schematic sheet and logging findings. Tell the customer about any Critical finding straight away and fill in the notified date.
 5. **Customer replies:** send the findings, record the customer's responses in the reply column, and save again.
 6. **Continue later:** reopen the customer's own file, not the template.
 

@@ -166,7 +166,9 @@ li.inh-ex .answer{opacity:.5}
 .tb input{border:0;background:transparent;padding:0;font:600 1.15rem/1.35 var(--cond);min-width:0;width:100%}
 .tb input::placeholder{color:var(--muted);opacity:.55;font-weight:500}
 .tb-tally{justify-content:center}
-.tb-actions{justify-content:center}
+.tb-actions{flex-direction:row;align-items:center;gap:2px}
+.icon.move{width:30px;height:30px;font-size:1.05rem}
+.icon:disabled{opacity:.3;cursor:default;border-color:transparent;color:var(--muted)}
 @media (max-width:720px){.titleblock{grid-template-columns:1fr 90px}.tb-tally,.tb-actions{grid-column:span 1;border-top:1px solid var(--ink)}.tb-tally{border-right:1px solid var(--ink)}.tb-num{border-right:0}}
 .rows-head,.note{display:grid;grid-template-columns:210px 64px 1fr 1fr 36px;gap:10px;align-items:start}
 .rows-head{padding:8px 12px;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line)}
@@ -206,6 +208,8 @@ li.inh-ex .answer{opacity:.5}
 .icon.armed{font-size:.7rem;font-weight:700;width:auto;padding:0 6px}
 .no-sheets{background:var(--surface);border:1.5px dashed var(--line);border-radius:8px;padding:28px;text-align:center;color:var(--muted);margin-bottom:18px}
 .foot-actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+#sort-pages{margin-right:auto}
+#sort-pages[hidden]{display:none}
 @media (prefers-reduced-motion:no-preference){.note.fresh{animation:in .35s ease-out}@keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}}
 </style>
 </head>
@@ -219,7 +223,7 @@ li.inh-ex .answer{opacity:.5}
       </div>
       <div class="doc-title">
         <h1>PCB Design Review</h1>
-        <p>Intake, schematic checklist and page-by-page findings.</p>
+        <p>Intake, schematic checklist and sheet-by-sheet findings.</p>
       </div>
       <div class="save-box">
         <button class="btn primary" id="save-file" type="button">Save review</button>
@@ -260,7 +264,8 @@ li.inh-ex .answer{opacity:.5}
     </ul>
     <div id="sheets"></div>
     <div class="foot-actions">
-      <button class="btn primary" id="add-page">+ Add page</button>
+      <button class="btn primary" id="add-page">+ Add sheet</button>
+      <button class="btn" id="sort-pages" hidden>Sort by sheet number</button>
       <button class="btn small" id="reset" data-arm="Confirm: clear everything">Clear review</button>
     </div>
   </section>
@@ -567,15 +572,19 @@ function noteRow(page, no, ref, fresh){
   </div>`;
 }
 function sheetHTML(page, freshId){
-  const r = refs(page);
+  const r = refs(page), i = state.pages.indexOf(page), last = state.pages.length - 1;
   return `<article class="sheet" data-page="${page.id}">
     <header class="titleblock">
-      <label class="tb tb-name"><span>Page name</span><input data-pfield="name" placeholder="e.g. Power supply" value="${esc(page.name)}"></label>
-      <label class="tb tb-num"><span>Page no.</span><input data-pfield="number" placeholder="#" inputmode="numeric" value="${esc(page.number)}"></label>
+      <label class="tb tb-name"><span>Sheet name</span><input data-pfield="name" placeholder="e.g. Power supply" value="${esc(page.name)}"></label>
+      <label class="tb tb-num"><span>Sheet number</span><input data-pfield="number" placeholder="#" inputmode="numeric" value="${esc(page.number)}"></label>
       <div class="tb tb-tally"><span>Findings</span><div class="totals">${tallyChips(page.notes)}</div></div>
-      <div class="tb tb-actions"><button class="btn small" data-delpage data-arm="Confirm delete">Delete page</button></div>
+      <div class="tb tb-actions">
+        <button class="icon move" data-movepage="-1" aria-label="Move sheet up" title="Move sheet up" ${i === 0 ? "disabled" : ""}>↑</button>
+        <button class="icon move" data-movepage="1" aria-label="Move sheet down" title="Move sheet down" ${i === last ? "disabled" : ""}>↓</button>
+        <button class="btn small" data-delpage data-arm="Confirm delete">Delete sheet</button>
+      </div>
     </header>
-    ${page.notes.length ? `<div class="rows-head"><span>Severity</span><span>Ref</span><span>My notes</span><span>Customer reply</span><span></span></div>` : `<div class="empty">No findings on this page yet.</div>`}
+    ${page.notes.length ? `<div class="rows-head"><span>Severity</span><span>Ref</span><span>My notes</span><span>Customer reply</span><span></span></div>` : `<div class="empty">No findings on this sheet yet.</div>`}
     ${page.notes.map(no => noteRow(page, no, r[no.id], no.id === freshId)).join("")}
     <div class="sheet-foot"><button class="btn" data-addnote>+ Add note</button></div>
   </article>`;
@@ -583,7 +592,8 @@ function sheetHTML(page, freshId){
 function renderSheets(){
   const el = $("#sheets");
   el.innerHTML = state.pages.length ? state.pages.map(p => sheetHTML(p)).join("")
-    : `<div class="no-sheets">No pages yet. Add one for each schematic sheet you review.</div>`;
+    : `<div class="no-sheets">No sheets yet. Add one for each schematic sheet you review.</div>`;
+  $("#sort-pages").hidden = state.pages.length < 2;
   el.querySelectorAll("textarea").forEach(grow);
   updateTotals();
 }
@@ -807,6 +817,12 @@ document.addEventListener("click", e => {
     inp.focus({preventScroll:true});
     return;
   }
+  if (b.id === "sort-pages") {
+    const key = p => { const n = parseFloat(p.number); return isNaN(n) ? Infinity : n; };
+    state.pages.sort((a, c) => key(a) - key(c) || String(a.number).localeCompare(String(c.number), undefined, {numeric: true}));
+    const y = window.scrollY; renderSheets(); window.scrollTo(0, y);
+    return save();
+  }
   if (b.id === "reset") {
     if (!armed(b)) return;
     state = blank(); renderAll(); save(); return;
@@ -824,6 +840,19 @@ document.addEventListener("click", e => {
     const note = noteOf(page, b);
     page.notes = page.notes.filter(n => n !== note);
     rerenderSheet(page); return save();
+  }
+  if (b.dataset.movepage) {
+    const dir = +b.dataset.movepage, i = state.pages.indexOf(page), j = i + dir;
+    if (j < 0 || j >= state.pages.length) return;
+    [state.pages[i], state.pages[j]] = [state.pages[j], state.pages[i]];
+    const top = b.closest(".sheet").getBoundingClientRect().top;
+    renderSheets();
+    // Keep the moved page under the pointer so the arrows can be clicked again
+    const moved = document.querySelector(`[data-page="${page.id}"]`);
+    window.scrollBy(0, moved.getBoundingClientRect().top - top);
+    const again = moved.querySelector(`[data-movepage="${dir}"]:not(:disabled)`) || moved.querySelector("[data-movepage]:not(:disabled)");
+    again && again.focus({preventScroll:true});
+    return save();
   }
   if (b.hasAttribute("data-delpage")) {
     if (!armed(b)) return;
