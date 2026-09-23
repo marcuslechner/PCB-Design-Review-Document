@@ -119,7 +119,7 @@ li.inh-ex .answer{opacity:.5}
 /* Link chips */
 .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .links:empty{display:none}
-.subs .links{margin-left:27px}
+.subs .links,.tree .links{margin-left:27px}
 .links a{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--brand);font-size:.85rem;font-weight:600;text-decoration:none}
 .links a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .links a svg{flex:none}
@@ -302,9 +302,9 @@ const QUESTIONS = [
 ];
 const SCHEM = [
   {card:"Boundary scan", items:[
-    {t:"What are the inputs and outputs?", a:1},
-    {t:"What is powering this?", a:1, c:["Look for power rails with common names: SYS, 12V, VDD_MAIN"]},
-    {t:"What are the main ICs?", a:1}
+    {t:"What are the inputs and outputs?", a:"Look for connectors and headers: USB, CAN, UART, SWD/JTAG, GPIO breakouts, antennas, buttons, LEDs"},
+    {t:"What is powering this?", a:"Look for power rails with common names: SYS, 12V, VDD_MAIN, VIN, VBAT, VBUS, 5V, 3V3, 1V8"},
+    {t:"What are the main ICs?", a:"e.g. MCU / SoC, FPGA, PMIC and regulators, transceivers (CAN, Ethernet, RS-485), memory, sensors"}
   ]},
   {card:"System view", items:[
     "Does everything connect properly?",
@@ -456,7 +456,7 @@ function renderTree(items, prefix, inhEx){
         <label class="chk"><input type="checkbox" data-check="${id}" ${st.d ? "checked" : ""} ${dead ? "disabled" : ""}><span class="txt">${esc(it.t)}</span></label>
         ${inhEx ? "" : `<button type="button" class="scope" data-scope="${id}" aria-pressed="${ex}">${ex ? "Put back in scope" : "Out of scope"}</button>`}
       </div>
-      ${it.a && !dead ? `<input class="answer" data-answer="${id}" placeholder="Notes / customer answer" value="${esc(st.a)}">` : ""}
+      ${it.a && !dead ? `<textarea class="area answer" data-answer="${id}" placeholder="${esc(typeof it.a === "string" ? it.a : "Notes / customer answer")}" aria-label="${esc(it.t)}">${esc(st.a)}</textarea>` : ""}
       ${ex ? `<input class="reason" data-reason="${id}" placeholder="Why not reviewed? e.g. customer request by email, 12 Sep" value="${esc(st.r)}">` : ""}
       ${kids ? renderTree(it.c, id, dead) : ""}
     </li>`;
@@ -478,6 +478,7 @@ function renderChecklists(){
   $("#schem").innerHTML = SCHEM.map((g, gi) =>
     `<div class="card g${gi}"><h3>${esc(g.card)}</h3>${renderTree(g.items, "s" + gi, false)}</div>`
   ).join("");
+  $("#schem").querySelectorAll("textarea").forEach(grow);
   updateProgress();
 }
 const intake = () => state.intake || (state.intake = {scope:{}, answers:{}});
@@ -627,7 +628,7 @@ function armed(btn){
 document.addEventListener("input", e => {
   const t = e.target;
   if (t.dataset.meta) { state.meta[t.dataset.meta] = t.value; return save(); }
-  if (t.dataset.answer) { chk(t.dataset.answer).a = t.value; return save(); }
+  if (t.dataset.answer) { chk(t.dataset.answer).a = t.value; grow(t); return save(); }
   if (t.dataset.scopeNotes) { scopeOf(t.dataset.scopeNotes).notes = t.value; grow(t); return save(); }
   if (t.dataset.subNotes) { const [k, sk] = t.dataset.subNotes.split(":"); subOf(k, sk).notes = t.value; grow(t); return save(); }
   if (t.dataset.areason) { scopeOf(t.dataset.areason).r = t.value; return save(); }
